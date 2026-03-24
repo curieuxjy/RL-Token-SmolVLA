@@ -1,0 +1,52 @@
+diff --git a/src/lerobot/policies/smolvla/modeling_smolvla.py b/src/lerobot/policies/smolvla/modeling_smolvla.py
+index e49226d2..e5f3d0ce 100644
+--- a/src/lerobot/policies/smolvla/modeling_smolvla.py
++++ b/src/lerobot/policies/smolvla/modeling_smolvla.py
+@@ -797,6 +797,47 @@ class VLAFlowMatching(nn.Module):
+         losses = F.mse_loss(u_t, v_t, reduction="none")
+         return losses
+ 
++    def extract_embeddings(
++        self, images, img_masks, lang_tokens, lang_masks, state, actions, noise=None, time=None
++    ) -> tuple[Tensor, Tensor]:
++        """Extract final-layer VLM and expert embeddings for RLT.
++
++        Runs the same forward pass as forward() but returns the intermediate
++        hidden states (prefix_out, suffix_out) instead of computing flow loss.
++
++        Returns:
++            prefix_out: (B, L_prefix, vlm_hidden_dim) — VLM final hidden states
++            suffix_out: (B, chunk_size, expert_hidden_dim) — Expert final hidden states
++        """
++        if noise is None:
++            noise = self.sample_noise(actions.shape, actions.device)
++        if time is None:
++            time = self.sample_time(actions.shape[0], actions.device)
++
++        time_expanded = time[:, None, None]
++        x_t = time_expanded * noise + (1 - time_expanded) * actions
++
++        prefix_embs, prefix_pad_masks, prefix_att_masks = self.embed_prefix(
++            images, img_masks, lang_tokens, lang_masks, state=state
++        )
++        suffix_embs, suffix_pad_masks, suffix_att_masks = self.embed_suffix(x_t, time)
++
++        pad_masks = torch.cat([prefix_pad_masks, suffix_pad_masks], dim=1)
++        att_masks = torch.cat([prefix_att_masks, suffix_att_masks], dim=1)
++
++        att_2d_masks = make_att_2d_masks(pad_masks, att_masks)
++        position_ids = torch.cumsum(pad_masks, dim=1) - 1
++        (prefix_out, suffix_out), _ = self.vlm_with_expert.forward(
++            attention_mask=att_2d_masks,
++            position_ids=position_ids,
++            past_key_values=None,
++            inputs_embeds=[prefix_embs, suffix_embs],
++            use_cache=False,
++            fill_kv_cache=False,
++        )
++        suffix_out = suffix_out[:, -self.config.chunk_size :]
++        return prefix_out, suffix_out
++
+     def sample_actions(
+         self,
+         images,
