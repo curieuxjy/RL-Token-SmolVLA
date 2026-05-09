@@ -1,6 +1,6 @@
 # RL Token (RLT) for SmolVLA on SO-101
 
-Implementation of the [RL Token paper](https://arxiv.org/abs/2505.13702) (Physical Intelligence) for [SmolVLA](https://huggingface.co/papers/2506.01844) on the SO-101 robot arm, built on top of [LeRobot](https://github.com/huggingface/lerobot) v0.4.4.
+Implementation of the [RL Token paper](https://www.pi.website/download/rlt.pdf) (Physical Intelligence) for [SmolVLA](https://arxiv.org/abs/2506.01844) on the SO-101 robot arm, built on top of [LeRobot](https://github.com/huggingface/lerobot) v0.4.4.
 
 ## What is RLT?
 
@@ -131,6 +131,6 @@ python scripts/run_rlt_inference.py \
 
 ## References
 
-- [RL Token paper](https://arxiv.org/abs/2505.13702) — Physical Intelligence, 2025
-- [SmolVLA paper](https://huggingface.co/papers/2506.01844) — HuggingFace, 2025
+- [RL Token paper](https://www.pi.website/download/rlt.pdf) — Physical Intelligence, 2025
+- [SmolVLA paper](https://arxiv.org/abs/2506.01844) — HuggingFace, 2025
 - [LeRobot](https://github.com/huggingface/lerobot) — HuggingFace robotics framework
